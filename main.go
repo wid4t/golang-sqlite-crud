@@ -73,5 +73,47 @@ func main() {
 
 	})
 
+	app.Get("/employee/:id", func(c *fiber.Ctx) error {
+		c.Set("Content-Type", "application/json")
+
+		var (
+			result   models.Response
+			employee models.Employee
+			id       string = c.Params("id")
+			message  string = "NOT FOUND"
+		)
+
+		row, err := db.Query("SELECT * FROM employee WHERE id = ?", id)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		for row.Next() {
+			message = "FOUND"
+			var id int
+			var name string
+			var jobName string
+			err = row.Scan(&id, &name, &jobName)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+			employee = models.Employee{
+				Id:      id,
+				Name:    name,
+				JobName: jobName,
+			}
+		}
+
+		result = models.Response{
+			Message:  message,
+			Employee: employee,
+		}
+
+		bytes, _ := json.Marshal(result)
+
+		return c.Send(bytes)
+	})
+
 	log.Fatal(app.Listen(":3000"))
 }

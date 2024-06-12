@@ -115,5 +115,34 @@ func main() {
 		return c.Send(bytes)
 	})
 
+	app.Put("/employee/:id", func(c *fiber.Ctx) error {
+
+		var (
+			id      = c.Params("id")
+			payload = new(models.Employee)
+		)
+
+		if err := c.BodyParser(payload); err != nil {
+			return err
+		}
+
+		_, err := db.Exec("UPDATE employee SET name = ?, jobName = ? WHERE id = ?", payload.Name, payload.JobName, id)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		return c.SendStatus(fiber.StatusAccepted)
+	})
+
+	app.Delete("/employee/:id", func(c *fiber.Ctx) error {
+		var (
+			id string = c.Params("id")
+		)
+
+		db.Exec("DELETE FROM employee WHERE id = ?", id)
+
+		return c.SendStatus(fiber.StatusAccepted)
+	})
+
 	log.Fatal(app.Listen(":3000"))
 }
